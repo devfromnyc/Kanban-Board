@@ -7,7 +7,7 @@ import "./App.css";
 const HEADER_HEIGHT = 64;
 
 function App() {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   return (
     <>

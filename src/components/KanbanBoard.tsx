@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import TicketCard, { type Ticket } from "./TicketCard";
+import { useAuth } from "../contexts/AuthContext";
 
 const COLUMNS = [
   { key: "unstarted", label: "Unstarted" },
   { key: "inprogress", label: "In Progress" },
   { key: "completed", label: "Completed" },
 ];
-
-const STORAGE_KEY = "kanban_tickets";
 
 const defaultTickets: Ticket[] = [
   {
@@ -37,31 +36,64 @@ const defaultTickets: Ticket[] = [
 ];
 
 const KanbanBoard: React.FC = () => {
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const { username, isAuthenticated } = useAuth();
+  const [tickets, setTickets] = useState<Ticket[] | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newStatus, setNewStatus] = useState("unstarted");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Load from localStorage on mount
+  // Always normalize username for the board key
+  const normalizedUsername = username ? username.trim().toLowerCase() : null;
+  const STORAGE_KEY = normalizedUsername
+    ? `kanban_tickets_${normalizedUsername}`
+    : null;
+
+  // Load tickets for the logged-in user (only when username is available)
   useEffect(() => {
+    if (!normalizedUsername || !STORAGE_KEY) {
+      setTickets(null);
+      return;
+    }
     const stored = localStorage.getItem(STORAGE_KEY);
+    console.log(
+      "[KanbanBoard] Username:",
+      normalizedUsername,
+      "Storage Key:",
+      STORAGE_KEY
+    );
     if (stored) {
       try {
-        setTickets(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        setTickets(parsed);
+        console.log(
+          "[KanbanBoard] Loaded ticket data from localStorage:",
+          parsed
+        );
       } catch {
         setTickets(defaultTickets);
+        console.log(
+          "[KanbanBoard] Failed to parse ticket data, loaded default tickets."
+        );
       }
     } else {
       setTickets(defaultTickets);
+      console.log(
+        "[KanbanBoard] No ticket data found, loaded default tickets."
+      );
     }
-  }, []);
+    // eslint-disable-next-line
+  }, [normalizedUsername, STORAGE_KEY]);
 
-  // Save to localStorage on tickets change
+  // Save tickets to localStorage for the current user (only if tickets is not null and username is available)
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
-  }, [tickets]);
+    if (normalizedUsername && STORAGE_KEY && tickets !== null) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
+    }
+    // eslint-disable-next-line
+  }, [tickets, normalizedUsername, STORAGE_KEY]);
 
   // Drag handlers
   const onDragStart = (id: string) => setDraggedId(id);
@@ -69,7 +101,9 @@ const KanbanBoard: React.FC = () => {
   const onDrop = (status: string) => {
     if (draggedId) {
       setTickets((tickets) =>
-        tickets.map((t) => (t.id === draggedId ? { ...t, status } : t))
+        tickets
+          ? tickets.map((t) => (t.id === draggedId ? { ...t, status } : t))
+          : null
       );
       setDraggedId(null);
     }
@@ -78,33 +112,46 @@ const KanbanBoard: React.FC = () => {
   // Card editing
   const handleEdit = (id: string, field: keyof Ticket, value: string) => {
     setTickets((tickets) =>
-      tickets.map((t) => (t.id === id ? { ...t, [field]: value } : t))
+      tickets
+        ? tickets.map((t) => (t.id === id ? { ...t, [field]: value } : t))
+        : null
     );
   };
+  const handleStartEdit = (id: string) => setEditingId(id);
+  const handleStopEdit = () => setEditingId(null);
 
   // Create new card
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
-    setTickets((tickets) => [
-      {
-        id: Date.now().toString(),
-        title: newTitle,
-        description: newDesc,
-        status: newStatus,
-      },
-      ...tickets,
-    ]);
+    const newTicket = {
+      id: Date.now().toString(),
+      title: newTitle,
+      description: newDesc,
+      status: newStatus,
+    };
+    setTickets((tickets) => (tickets ? [newTicket, ...tickets] : [newTicket]));
     setNewTitle("");
     setNewDesc("");
     setNewStatus("unstarted");
     setShowModal(false);
+    console.log(
+      "[KanbanBoard] Created new ticket:",
+      newTicket,
+      "Title:",
+      newTicket.title
+    );
   };
 
   // Delete card
   const handleDelete = (id: string) => {
-    setTickets((tickets) => tickets.filter((t) => t.id !== id));
+    setTickets((tickets) =>
+      tickets ? tickets.filter((t) => t.id !== id) : null
+    );
+    if (editingId === id) setEditingId(null);
   };
+
+  if (!isAuthenticated || !normalizedUsername || tickets === null) return null;
 
   return (
     <div className="kanban-board">
@@ -183,6 +230,9 @@ const KanbanBoard: React.FC = () => {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onDragStart={onDragStart}
+                    isEditing={editingId === ticket.id}
+                    onStartEdit={handleStartEdit}
+                    onStopEdit={handleStopEdit}
                   />
                 ))}
             </div>

@@ -8,7 +8,7 @@ const menuItems = [
 ];
 
 const Header: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { username, isAuthenticated, logout } = useAuth();
 
   return (
     <nav className="header">
@@ -22,9 +22,9 @@ const Header: React.FC = () => {
               </a>
             ))}
           </div>
-          {user && (
+          {isAuthenticated && username && (
             <div className="nav-user">
-              <span className="nav-username">{user.name}</span>
+              <span className="nav-username">{username}</span>
               <button className="nav-logout" onClick={logout}>
                 Logout
               </button>

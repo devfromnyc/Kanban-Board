@@ -2,19 +2,39 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
 const LoginForm: React.FC = () => {
-  const { login } = useAuth();
+  const { login, register, error } = useAuth();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<"register" | "login">("register");
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setLocalError(null);
     if (!name.trim() || !password) {
-      setError("Please enter both username and password.");
+      setLocalError("Please enter both username and password.");
       return;
     }
-    setError(null);
-    login(name.trim(), password);
+    const normalized = name.trim().toLowerCase();
+    console.log("[LoginForm] Attempting login for username:", normalized);
+    login(normalized, password);
+  };
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLocalError(null);
+    if (!name.trim() || !password) {
+      setLocalError("Please enter both username and password.");
+      return;
+    }
+    const normalized = name.trim().toLowerCase();
+    const success = register(normalized, password);
+    if (success) {
+      console.log("[LoginForm] Registered new user:", normalized, {
+        username: normalized,
+        password,
+      });
+    }
   };
 
   return (
@@ -44,7 +64,9 @@ const LoginForm: React.FC = () => {
             marginBottom: 6,
             textAlign: "center",
           }}>
-          Welcome to Kanban Board
+          {mode === "register"
+            ? "Register for Kanban Board"
+            : "Login to Kanban Board"}
         </h2>
         <p
           style={{
@@ -53,10 +75,12 @@ const LoginForm: React.FC = () => {
             marginBottom: 24,
             textAlign: "center",
           }}>
-          Sign in to continue
+          {mode === "register"
+            ? "Create a new account to get started."
+            : "Sign in to your account."}
         </p>
         <form
-          onSubmit={handleSubmit}
+          onSubmit={mode === "register" ? handleRegister : handleLogin}
           style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label
@@ -108,9 +132,9 @@ const LoginForm: React.FC = () => {
               }}
             />
           </div>
-          {error && (
+          {(localError || error) && (
             <div style={{ color: "#e11d48", fontSize: 14, marginTop: -8 }}>
-              {error}
+              {localError || error}
             </div>
           )}
           <button
@@ -130,9 +154,48 @@ const LoginForm: React.FC = () => {
             }}
             onMouseOver={(e) => (e.currentTarget.style.background = "#1e40af")}
             onMouseOut={(e) => (e.currentTarget.style.background = "#2563eb")}>
-            Login
+            {mode === "register" ? "Register" : "Login"}
           </button>
         </form>
+        <div style={{ marginTop: 18, textAlign: "center" }}>
+          {mode === "register" ? (
+            <button
+              type="button"
+              style={{
+                background: "none",
+                border: "none",
+                color: "#2563eb",
+                fontWeight: 600,
+                cursor: "pointer",
+                textDecoration: "underline",
+                fontSize: 15,
+              }}
+              onClick={() => {
+                setMode("login");
+                setLocalError(null);
+              }}>
+              Already a user? Login here
+            </button>
+          ) : (
+            <button
+              type="button"
+              style={{
+                background: "none",
+                border: "none",
+                color: "#2563eb",
+                fontWeight: 600,
+                cursor: "pointer",
+                textDecoration: "underline",
+                fontSize: 15,
+              }}
+              onClick={() => {
+                setMode("register");
+                setLocalError(null);
+              }}>
+              New user? Register here
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
