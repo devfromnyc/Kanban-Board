@@ -1,69 +1,114 @@
-# React + TypeScript + Vite
+# Kanban Board Demo App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern Kanban board web app built with React, Vite, and TypeScript. This project demonstrates a simple, persistent Kanban workflow with user authentication and per-user data storage, all using localStorage for demo purposes.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- **User Registration & Login**
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+  - Register a new account or log in with an existing one.
+  - Usernames are case-insensitive and trimmed.
+  - Each user's board data is private and persistent.
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Kanban Board**
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+  - Three columns: Unstarted, In Progress, Completed.
+  - Add, edit, and delete tickets (tasks).
+  - Drag and drop tickets between columns.
+  - Edit ticket details and status (column) in-place.
+  - All board data is saved to localStorage and tied to the logged-in user.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- **Responsive UI**
+  - Modern, clean design with a sticky header and modal forms.
+  - Works on desktop and mobile browsers.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18+ recommended)
+- npm
+
+### Setup
+
+1. Clone the repository:
+   ```sh
+   git clone <repo-url>
+   cd kanban-board
+   ```
+2. Install dependencies:
+   ```sh
+   npm install
+   ```
+3. Start the development server:
+   ```sh
+   npm run dev
+   ```
+4. Open your browser to [http://localhost:5173](http://localhost:5173)
+
+---
+
+## Usage
+
+1. **Register** a new account with a username and password.
+2. **Log in** with your credentials.
+3. Add, edit, drag, and delete tickets on your personal Kanban board.
+4. Log out and log back in to see your data persist.
+
+---
+
+## Authentication Logic (Demo-Only)
+
+> **Note:** This app uses a very basic authentication system for demonstration purposes only. **Do not use this approach in production.**
+
+- **How it works:**
+
+  - All users are stored in localStorage as an array of `{ username, password }` objects.
+  - When you register, your username and password are saved in localStorage.
+  - When you log in, the app checks for a matching username and password in localStorage.
+  - The current session is stored as the username in localStorage.
+  - Each user's board data is stored under a key like `kanban_tickets_{username}`.
+
+- **Limitations:**
+
+  - **No encryption:** Passwords are stored in plain text in the browser's localStorage.
+  - **No security:** Anyone with access to your browser can view or modify user data.
+  - **No backend:** All data is local to your browser; there is no server or real authentication.
+  - **No password reset or email verification.**
+
+- **Why?**
+  - This approach is for learning, prototyping, and demoing UI/UX only.
+  - It allows you to see how authentication and per-user data might work in a real app, but without any real security.
+
+---
+
+## Folder Structure
+
+```
+kanban-board/
+├── src/
+│   ├── components/
+│   │   ├── Header.tsx
+│   │   ├── KanbanBoard.tsx
+│   │   ├── LoginForm.tsx
+│   │   └── TicketCard.tsx
+│   ├── contexts/
+│   │   └── AuthContext.tsx
+│   ├── App.tsx
+│   ├── App.css
+│   └── main.tsx
+├── index.html
+├── package.json
+├── tsconfig.json
+└── README.md
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## License
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+This project is open source and free to use for learning and demo purposes.
