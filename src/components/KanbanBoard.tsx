@@ -39,8 +39,10 @@ const defaultTickets: Ticket[] = [
 const KanbanBoard: React.FC = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
+  const [newStatus, setNewStatus] = useState("unstarted");
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -89,12 +91,14 @@ const KanbanBoard: React.FC = () => {
         id: Date.now().toString(),
         title: newTitle,
         description: newDesc,
-        status: "unstarted",
+        status: newStatus,
       },
       ...tickets,
     ]);
     setNewTitle("");
     setNewDesc("");
+    setNewStatus("unstarted");
+    setShowModal(false);
   };
 
   // Delete card
@@ -104,6 +108,62 @@ const KanbanBoard: React.FC = () => {
 
   return (
     <div className="kanban-board">
+      <button className="kanban-add-btn" onClick={() => setShowModal(true)}>
+        Add Ticket
+      </button>
+      {showModal && (
+        <div
+          className="kanban-modal-overlay"
+          onClick={() => setShowModal(false)}>
+          <div className="kanban-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="kanban-modal-close"
+              aria-label="Close"
+              onClick={() => setShowModal(false)}>
+              ✕
+            </button>
+            <h2>Add Ticket</h2>
+            <form className="kanban-create-form" onSubmit={handleCreate}>
+              <input
+                className="kanban-card-title"
+                placeholder="Ticket title"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                required
+              />
+              <textarea
+                className="kanban-card-desc"
+                placeholder="Description (optional)"
+                value={newDesc}
+                onChange={(e) => setNewDesc(e.target.value)}
+              />
+              <select
+                className="kanban-card-status"
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}>
+                {COLUMNS.map((opt) => (
+                  <option key={opt.key} value={opt.key}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <div className="kanban-modal-actions">
+                <button
+                  className="kanban-create-btn kanban-create-btn-lg"
+                  type="submit">
+                  Add
+                </button>
+                <button
+                  type="button"
+                  className="kanban-create-btn kanban-create-btn-cancel"
+                  onClick={() => setShowModal(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       <div className="kanban-columns">
         {COLUMNS.map((col) => (
           <div
@@ -112,26 +172,6 @@ const KanbanBoard: React.FC = () => {
             onDragOver={onDragOver}
             onDrop={() => onDrop(col.key)}>
             <div className="kanban-column-title">{col.label}</div>
-            {col.key === "unstarted" && (
-              <form className="kanban-create-form" onSubmit={handleCreate}>
-                <input
-                  className="kanban-card-title"
-                  placeholder="New ticket title"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  required
-                />
-                <textarea
-                  className="kanban-card-desc"
-                  placeholder="Description (optional)"
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                />
-                <button className="kanban-create-btn" type="submit">
-                  Add
-                </button>
-              </form>
-            )}
             <div className="kanban-column-cards">
               {tickets
                 .filter((t) => t.status === col.key)
